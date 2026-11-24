@@ -4,7 +4,7 @@ import { CircuitJsonToAltiumConverter } from "../lib"
 import { board } from "./fixtures"
 import { getCopperStackEntries } from "./fixtures/pcb-copper-stack"
 
-test.failing("preserves declared copper layer order and native IDs in binary PCB documents", () => {
+test("preserves declared copper layer order and native IDs in binary PCB documents", () => {
   for (const count of [4, 2, 6, 8, 10, 32]) {
     const converter = new CircuitJsonToAltiumConverter([
       board({ num_layers: count }),

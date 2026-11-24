@@ -1,5 +1,6 @@
 import { convertCircuitPcbCcwRotationDegreesToAltium } from "./convert-circuit-pcb-ccw-rotation-degrees-to-altium"
 import { createCircuitToAltiumPcbPointTransform } from "./create-circuit-to-altium-pcb-point-transform"
+import { createPcbBoardLayerStackFields } from "./create-pcb-board-layer-stack-fields"
 import { createPcbComponentBodyRecords } from "./create-pcb-component-body-records"
 import { createPcbCopperPourRecords } from "./create-pcb-copper-pour-records"
 import { createPcbCourtyardRecords } from "./create-pcb-courtyard-records"
@@ -114,6 +115,7 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
       "|RECORD=Board",
       "KIND=Protel_Advanced_PCB",
       "VERSION=5.00",
+      ...createPcbBoardLayerStackFields(circuitJson),
       ...boardFields,
     ].join("|"),
   ]

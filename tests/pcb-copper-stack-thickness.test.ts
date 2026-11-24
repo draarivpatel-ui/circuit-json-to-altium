@@ -4,8 +4,9 @@ import { CircuitJsonToAltiumConverter } from "../lib"
 import { board } from "./fixtures"
 import { getCopperStackEntries } from "./fixtures/pcb-copper-stack"
 
-test.failing("preserves total board thickness in the native copper and dielectric stack", () => {
+test("preserves total board thickness in the native copper and dielectric stack", () => {
   for (const [numLayers, thickness] of [
+    [1, 0.8],
     [2, 1.6],
     [4, 1.2],
     [8, 0.8],
@@ -20,7 +21,7 @@ test.failing("preserves total board thickness in the native copper and dielectri
     const copper = getCopperStackEntries(document)
     const dielectric = entries.filter((entry) => entry.dielectricHeight)
     expect(copper).toHaveLength(numLayers)
-    expect(dielectric).toHaveLength(numLayers - 1)
+    expect(dielectric).toHaveLength(Math.max(1, numLayers - 1))
     const total = entries.reduce(
       (sum, entry) =>
         sum +
