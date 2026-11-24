@@ -12,6 +12,12 @@ import type {
   SchematicSheetId,
 } from "../types"
 
+type SchematicSourcePath = string
+
+function normalizeSchematicPath(path: string): string {
+  return path.toLocaleLowerCase("en-US")
+}
+
 function getSchematicSheetSettings(
   schematicSheets: AltiumSchematicSheetOptions[],
   schematicSheetId: SchematicSheetId | undefined,
@@ -76,19 +82,18 @@ export class BuildSchematicDocumentsStage extends ConverterStage<
         }
       },
     )
-    const normalize = (filename: string) => filename.toLocaleLowerCase("en-US")
     const usedFilenames = new Set([
-      normalize(`${this.context.safeProjectName}.SchDoc`),
+      normalizeSchematicPath(`${this.context.safeProjectName}.SchDoc`),
     ])
     const requestedFilenames = new Set(
-      childSheets.map((sheet) => normalize(sheet.filename)),
+      childSheets.map((sheet) => normalizeSchematicPath(sheet.filename)),
     )
-    const filenameBySourcePath = new Map<string, string>()
+    const filenameBySourcePath = new Map<SchematicSourcePath, string>()
     const uniqueChildSheets: typeof childSheets = []
     for (const [index, childSheet] of childSheets.entries()) {
       // Repeated hierarchy instances may intentionally reference the same file.
       // Compare full source paths so distinct directories never collapse together.
-      const sourcePath = normalize(
+      const sourcePath = normalizeSchematicPath(
         asString(sheets[index]?.source_filename).replaceAll("\\", "/"),
       )
       const sharedFilename = sourcePath
@@ -102,13 +107,14 @@ export class BuildSchematicDocumentsStage extends ConverterStage<
       let filename = requested
       let suffix = 2
       while (
-        usedFilenames.has(normalize(filename)) ||
-        (filename !== requested && requestedFilenames.has(normalize(filename)))
+        usedFilenames.has(normalizeSchematicPath(filename)) ||
+        (filename !== requested &&
+          requestedFilenames.has(normalizeSchematicPath(filename)))
       ) {
         filename = `${requested.slice(0, -7)}-${suffix++}.SchDoc`
       }
       childSheet.filename = filename
-      usedFilenames.add(normalize(filename))
+      usedFilenames.add(normalizeSchematicPath(filename))
       if (sourcePath) filenameBySourcePath.set(sourcePath, filename)
       uniqueChildSheets.push(childSheet)
     }
