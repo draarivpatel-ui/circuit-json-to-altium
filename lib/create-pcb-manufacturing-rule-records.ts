@@ -12,50 +12,75 @@ const ruleTypes = {
 type RuleKind = keyof typeof ruleTypes
 const traceScope = "IsTrack Or IsArc"
 
+type ManufacturingRuleOptions = {
+  kind: RuleKind
+  name: string
+  scope1: string
+  scope2: string
+  netScope: string
+  fields: string[]
+}
+
+function addRule(
+  { kind, name, scope1, scope2, netScope, fields }: ManufacturingRuleOptions,
+  records: string[],
+): void {
+  records.push(
+    [
+      "|RECORD=Rule",
+      `BINARYRECORDTYPE=${ruleTypes[kind]}`,
+      `RULEKIND=${kind}`,
+      `NAME=Tscircuit${name}`,
+      "ENABLED=TRUE",
+      "DEFINEDBYLOGICALDOCUMENT=FALSE",
+      `PRIORITY=${records.length + 1000}`,
+      `NETSCOPE=${netScope}`,
+      "LAYERKIND=SameLayer",
+      `SCOPE1EXPRESSION=${scope1}`,
+      `SCOPE2EXPRESSION=${scope2}`,
+      ...fields,
+    ].join("|"),
+  )
+}
+
+function getManufacturingConstraint(
+  board: CircuitElement,
+  field: string,
+): number | undefined {
+  const constraint = board[field]
+  if (constraint === undefined) return undefined
+  if (
+    typeof constraint !== "number" ||
+    !Number.isFinite(constraint) ||
+    constraint < 0
+  )
+    throw new RangeError(`Invalid PCB manufacturing constraint: ${field}`)
+  return constraint
+}
+
+function formatManufacturingMeasurement(millimeters: number): string {
+  return formatMil(millimeters * MILLIMETERS_TO_MILS)
+}
+
 export function createPcbManufacturingRuleRecords(
   circuitJson: CircuitElement[],
 ): string[] {
   const board = byType(circuitJson, "pcb_board")[0]
   if (!board) return []
   const records: string[] = []
-  const addRule = (
-    kind: RuleKind,
-    name: string,
-    scope1: string,
-    scope2: string,
-    netScope: string,
-    fields: string[],
-  ) => {
-    records.push(
-      [
-        "|RECORD=Rule",
-        `BINARYRECORDTYPE=${ruleTypes[kind]}`,
-        `RULEKIND=${kind}`,
-        `NAME=Tscircuit${name}`,
-        "ENABLED=TRUE",
-        "DEFINEDBYLOGICALDOCUMENT=FALSE",
-        `PRIORITY=${records.length + 1000}`,
-        `NETSCOPE=${netScope}`,
-        "LAYERKIND=SameLayer",
-        `SCOPE1EXPRESSION=${scope1}`,
-        `SCOPE2EXPRESSION=${scope2}`,
-        ...fields,
-      ].join("|"),
-    )
-  }
-  const value = (field: string): number | undefined => {
-    const raw = board[field]
-    if (raw === undefined) return undefined
-    if (typeof raw !== "number" || !Number.isFinite(raw) || raw < 0)
-      throw new RangeError(`Invalid PCB manufacturing constraint: ${field}`)
-    return raw
-  }
-  const measurement = (mm: number) => formatMil(mm * MILLIMETERS_TO_MILS)
-  const width = value("min_trace_width")
+  const width = getManufacturingConstraint(board, "min_trace_width")
   if (width !== undefined)
-    addRule("Width", "MinTraceWidth", traceScope, "All", "AnyNet", [
-      `MINLIMIT=${measurement(width)}`,
-    ])
+    addRule(
+      {
+        kind: "Width",
+        name: "MinTraceWidth",
+        scope1: traceScope,
+        scope2: "All",
+        netScope: "AnyNet",
+        fields: [`MINLIMIT=${formatManufacturingMeasurement(width)}`],
+      },
+      records,
+    )
   const clearances: [string, string, string, string, string][] = [
     [
       "min_trace_to_pad_edge_clearance",
@@ -94,11 +119,19 @@ export function createPcbManufacturingRuleRecords(
     ],
   ]
   for (const [field, name, scope1, scope2, netScope] of clearances) {
-    const gap = value(field)
+    const gap = getManufacturingConstraint(board, field)
     if (gap !== undefined)
-      addRule("Clearance", name, scope1, scope2, netScope, [
-        `GAP=${measurement(gap)}`,
-      ])
+      addRule(
+        {
+          kind: "Clearance",
+          name,
+          scope1,
+          scope2,
+          netScope,
+          fields: [`GAP=${formatManufacturingMeasurement(gap)}`],
+        },
+        records,
+      )
   }
   for (const [field, name, scope] of [
     [
@@ -112,33 +145,60 @@ export function createPcbManufacturingRuleRecords(
       "IsPad And (PadIsPlated = 'True')",
     ],
   ] as const) {
-    const gap = value(field)
+    const gap = getManufacturingConstraint(board, field)
     if (gap !== undefined)
-      addRule("HoleToHoleClearance", name, scope, scope, "AnyNet", [
-        `GAP=${measurement(gap)}`,
-      ])
+      addRule(
+        {
+          kind: "HoleToHoleClearance",
+          name,
+          scope1: scope,
+          scope2: scope,
+          netScope: "AnyNet",
+          fields: [`GAP=${formatManufacturingMeasurement(gap)}`],
+        },
+        records,
+      )
   }
-  const edge = value("min_board_edge_clearance")
+  const edge = getManufacturingConstraint(board, "min_board_edge_clearance")
   if (edge !== undefined)
     addRule(
-      "BoardOutlineClearance",
-      "BoardEdgeClearance",
-      "All",
-      "All",
-      "AnyNet",
-      [`GAP=${measurement(edge)}`, `GENERICCLEARANCE=${measurement(edge)}`],
+      {
+        kind: "BoardOutlineClearance",
+        name: "BoardEdgeClearance",
+        scope1: "All",
+        scope2: "All",
+        netScope: "AnyNet",
+        fields: [
+          `GAP=${formatManufacturingMeasurement(edge)}`,
+          `GENERICCLEARANCE=${formatManufacturingMeasurement(edge)}`,
+        ],
+      },
+      records,
     )
-  const holeDiameter = value("min_via_hole_diameter")
-  const padDiameter = value("min_via_pad_diameter")
+  const holeDiameter = getManufacturingConstraint(
+    board,
+    "min_via_hole_diameter",
+  )
+  const padDiameter = getManufacturingConstraint(board, "min_via_pad_diameter")
   if (holeDiameter !== undefined || padDiameter !== undefined)
-    addRule("RoutingVias", "MinViaSize", "IsVia", "All", "AnyNet", [
-      ...(holeDiameter === undefined
-        ? []
-        : [`MINHOLEWIDTH=${measurement(holeDiameter)}`]),
-      ...(padDiameter === undefined
-        ? []
-        : [`MINWIDTH=${measurement(padDiameter)}`]),
-    ])
+    addRule(
+      {
+        kind: "RoutingVias",
+        name: "MinViaSize",
+        scope1: "IsVia",
+        scope2: "All",
+        netScope: "AnyNet",
+        fields: [
+          ...(holeDiameter === undefined
+            ? []
+            : [`MINHOLEWIDTH=${formatManufacturingMeasurement(holeDiameter)}`]),
+          ...(padDiameter === undefined
+            ? []
+            : [`MINWIDTH=${formatManufacturingMeasurement(padDiameter)}`]),
+        ],
+      },
+      records,
+    )
   return records
 }
 
