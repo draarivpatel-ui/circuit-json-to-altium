@@ -13,6 +13,7 @@ import { createPcbSilkscreenGraphicRecords } from "./create-pcb-silkscreen-graph
 import { createPcbSilkscreenLineRecords } from "./create-pcb-silkscreen-line-records"
 import { createPcbSilkscreenRectRecords } from "./create-pcb-silkscreen-rect-records"
 import { createPcbSilkscreenTextRecord } from "./create-pcb-silkscreen-text-record"
+import { createSmtPadSolderMaskFields } from "./create-smt-pad-solder-mask-fields"
 import {
   asNumber,
   asPoint,
@@ -270,6 +271,7 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
         `X=${formatMil(altiumCenter.x)}`,
         `Y=${formatMil(altiumCenter.y)}`,
         ...getSmtPadShapeFields({ pad, width, height, layer }),
+        ...createSmtPadSolderMaskFields(pad, layer),
         `XSIZE=${formatMil(width * MILLIMETERS_TO_MILS)}`,
         `YSIZE=${formatMil(height * MILLIMETERS_TO_MILS)}`,
       ].join("|"),

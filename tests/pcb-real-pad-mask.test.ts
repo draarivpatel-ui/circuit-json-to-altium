@@ -17,7 +17,7 @@ async function scenario() {
   }
 }
 
-test.failing("retains mask coverage on the first real rectangular SMT pad", async () => {
+test("retains mask coverage on the first real rectangular SMT pad", async () => {
   const { pad } = await scenario()
   expect(pad.getBoolean("TENTEDTOP")).toBe(true)
 }, 30_000)
