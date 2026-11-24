@@ -13,6 +13,7 @@ import { createPcbSilkscreenGraphicRecords } from "./create-pcb-silkscreen-graph
 import { createPcbSilkscreenLineRecords } from "./create-pcb-silkscreen-line-records"
 import { createPcbSilkscreenRectRecords } from "./create-pcb-silkscreen-rect-records"
 import { createPcbSilkscreenTextRecord } from "./create-pcb-silkscreen-text-record"
+import { createPcbTextRecord } from "./create-pcb-text-record"
 import {
   asNumber,
   asPoint,
@@ -538,6 +539,19 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
         ),
         circuitToAltiumPcbPoint,
         silkscreenText,
+      }),
+    )
+  }
+
+  for (const copperText of byType(circuitJson, "pcb_copper_text")) {
+    recordLines.push(
+      createPcbTextRecord({
+        altiumComponentIndex: componentIndex.get(
+          asString(copperText.pcb_component_id),
+        ),
+        circuitText: copperText,
+        circuitToAltiumPcbPoint,
+        layer: getAltiumPcbTrackLayer(asString(copperText.layer, "top")),
       }),
     )
   }
