@@ -111,7 +111,7 @@ export class BuildSchematicDocumentsStage extends ConverterStage<
         (filename !== requested &&
           requestedFilenames.has(normalizeSchematicPath(filename)))
       ) {
-        filename = `${requested.slice(0, -7)}-${suffix++}.SchDoc`
+        filename = `${requested.slice(0, -7)}-${String(suffix++).padStart(2, "0")}.SchDoc`
       }
       childSheet.filename = filename
       usedFilenames.add(normalizeSchematicPath(filename))

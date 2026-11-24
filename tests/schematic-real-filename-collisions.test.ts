@@ -44,7 +44,7 @@ test("records the actual files and surviving schematic components", async () => 
     {
       "componentCount": 115,
       "files": [
-        "Power-2.SchDoc",
+        "Power-02.SchDoc",
         "Power.SchDoc",
         "nema17-03.SchDoc",
         "nema17-04.SchDoc",
