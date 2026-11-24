@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import type { AltiumPcbDocument } from "altiumts"
 import { type CircuitElement, extractArchive } from "./fixtures"
 
 async function scenario() {
@@ -9,6 +10,24 @@ async function scenario() {
     ...(await extractArchive(elements)),
     board: elements.find((element) => element.type === "pcb_board")!,
   }
+}
+
+function getMinimumMillimeters({
+  pcb,
+  name,
+  field,
+}: {
+  pcb: AltiumPcbDocument
+  name: string
+  field: string
+}): number | null {
+  const minimumMillimeters = pcb.rules
+    .find((rule) => rule.get("NAME") === name)
+    ?.getAltiumMeasurement(field)
+    ?.toMillimeters()
+  return minimumMillimeters === undefined
+    ? null
+    : Number(minimumMillimeters.toFixed(4))
 }
 
 test.failing("preserves manufacturing width and clearance settings already present on the real board", async () => {
@@ -37,17 +56,22 @@ test.failing("preserves manufacturing width and clearance settings already prese
 
 test("records the real board's exported manufacturing minima", async () => {
   const { pcb } = await scenario()
-  const minimum = (name: string, field: string) => {
-    const value = pcb.rules
-      .find((rule) => rule.get("NAME") === name)
-      ?.getAltiumMeasurement(field)
-      ?.toMillimeters()
-    return value === undefined ? null : Number(value.toFixed(4))
-  }
   expect({
-    minimumTraceWidthMm: minimum("TscircuitMinTraceWidth", "MINLIMIT"),
-    traceToPadGapMm: minimum("TscircuitTraceToPadClearance", "GAP"),
-    boardEdgeGapMm: minimum("TscircuitBoardEdgeClearance", "GAP"),
+    minimumTraceWidthMm: getMinimumMillimeters({
+      pcb,
+      name: "TscircuitMinTraceWidth",
+      field: "MINLIMIT",
+    }),
+    traceToPadGapMm: getMinimumMillimeters({
+      pcb,
+      name: "TscircuitTraceToPadClearance",
+      field: "GAP",
+    }),
+    boardEdgeGapMm: getMinimumMillimeters({
+      pcb,
+      name: "TscircuitBoardEdgeClearance",
+      field: "GAP",
+    }),
     ruleCount: pcb.rules.length,
   }).toMatchInlineSnapshot(`
     {

@@ -1,5 +1,8 @@
 import { expect, test } from "bun:test"
+import type { AltiumRuleRecord } from "altiumts"
 import { board, extractArchive } from "./fixtures"
+
+type ManufacturingRuleName = string | undefined
 
 test.failing("writes native rule types, pair scopes and minima without inventing constraints", async () => {
   const settings = {
@@ -16,7 +19,9 @@ test.failing("writes native rule types, pair scopes and minima without inventing
     min_via_pad_diameter: 0.65,
   }
   const { pcb } = await extractArchive([board(settings)])
-  const rules = new Map(pcb.rules.map((rule) => [rule.get("NAME"), rule]))
+  const rules = new Map<ManufacturingRuleName, AltiumRuleRecord>(
+    pcb.rules.map((rule) => [rule.get("NAME"), rule]),
+  )
   expect(rules.size).toBe(10)
   for (const [name, field, expected, type] of [
     ["MinTraceWidth", "MINLIMIT", 0.25, 2],
