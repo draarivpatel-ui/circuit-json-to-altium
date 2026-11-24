@@ -4,7 +4,7 @@ import { CircuitJsonToAltiumConverter } from "../lib"
 import { board, type CircuitElement } from "./fixtures"
 import { getCopperStackEntries } from "./fixtures/pcb-copper-stack"
 
-test.failing("infers missing board layer counts from tracks, copper pours, and via spans", () => {
+test("infers missing board layer counts from tracks, copper pours, and via spans", () => {
   const cases: { elements: CircuitElement[]; count: number }[] = [
     { elements: [], count: 2 },
     {
