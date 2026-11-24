@@ -76,13 +76,42 @@ export class BuildSchematicDocumentsStage extends ConverterStage<
         }
       },
     )
-    const seenChildFilenames = new Set<string>()
-    const uniqueChildSheets = childSheets.filter((childSheet) => {
-      const normalizedFilename = childSheet.filename.toLocaleLowerCase("en-US")
-      if (seenChildFilenames.has(normalizedFilename)) return false
-      seenChildFilenames.add(normalizedFilename)
-      return true
-    })
+    const normalize = (filename: string) => filename.toLocaleLowerCase("en-US")
+    const usedFilenames = new Set([
+      normalize(`${this.context.safeProjectName}.SchDoc`),
+    ])
+    const requestedFilenames = new Set(
+      childSheets.map((sheet) => normalize(sheet.filename)),
+    )
+    const filenameBySourcePath = new Map<string, string>()
+    const uniqueChildSheets: typeof childSheets = []
+    for (const [index, childSheet] of childSheets.entries()) {
+      // Repeated hierarchy instances may intentionally reference the same file.
+      // Compare full source paths so distinct directories never collapse together.
+      const sourcePath = normalize(
+        asString(sheets[index]?.source_filename).replaceAll("\\", "/"),
+      )
+      const sharedFilename = sourcePath
+        ? filenameBySourcePath.get(sourcePath)
+        : undefined
+      if (sharedFilename) {
+        childSheet.filename = sharedFilename
+        continue
+      }
+      const requested = childSheet.filename
+      let filename = requested
+      let suffix = 2
+      while (
+        usedFilenames.has(normalize(filename)) ||
+        (filename !== requested && requestedFilenames.has(normalize(filename)))
+      ) {
+        filename = `${requested.slice(0, -7)}-${suffix++}.SchDoc`
+      }
+      childSheet.filename = filename
+      usedFilenames.add(normalize(filename))
+      if (sourcePath) filenameBySourcePath.set(sourcePath, filename)
+      uniqueChildSheets.push(childSheet)
+    }
     const documentDefinitions =
       childSheets.length === 0
         ? [

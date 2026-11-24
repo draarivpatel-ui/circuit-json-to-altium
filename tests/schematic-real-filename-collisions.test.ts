@@ -18,7 +18,7 @@ async function scenario(kind: "root" | "directory") {
 }
 
 for (const kind of ["root", "directory"] as const) {
-  test.failing(`preserves all real-board schematic files after ${kind} name collision`, async () => {
+  test(`preserves all real-board schematic files after ${kind} name collision`, async () => {
     const result = await scenario(kind)
     expect(result.schematicSources).toHaveLength(result.expectedDocuments)
     expect(result.schematics.flatMap((sheet) => sheet.components)).toHaveLength(
@@ -42,8 +42,9 @@ test("records the actual files and surviving schematic components", async () => 
       .length,
   }).toMatchInlineSnapshot(`
     {
-      "componentCount": 101,
+      "componentCount": 115,
       "files": [
+        "Power-2.SchDoc",
         "Power.SchDoc",
         "nema17-03.SchDoc",
         "nema17-04.SchDoc",
