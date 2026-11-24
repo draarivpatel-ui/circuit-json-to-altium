@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { board, extractArchive } from "./fixtures"
 
-test.failing("skips every reserved suffix and remains deterministic for repeated net names", async () => {
+test("skips every reserved suffix and remains deterministic for repeated net names", async () => {
   const input = [
     board(),
     ...["DATA", "DATA", "DATA", "DATA-2", "DATA-3"].map((name, index) => ({

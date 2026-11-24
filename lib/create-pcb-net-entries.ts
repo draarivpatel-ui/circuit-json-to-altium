@@ -19,17 +19,27 @@ export type PcbNetEntry = {
 type GetUniquePcbNetNameOptions = {
   basePcbNetName: PcbNetName
   useCountByPcbNetName: Map<PcbNetName, number>
+  usedNames: Set<string>
+  reservedNames: Set<string>
 }
 
 function getUniquePcbNetName({
   basePcbNetName,
   useCountByPcbNetName,
+  usedNames,
+  reservedNames,
 }: GetUniquePcbNetNameOptions): PcbNetName {
-  const pcbNetNameUseCount = (useCountByPcbNetName.get(basePcbNetName) ?? 0) + 1
-  useCountByPcbNetName.set(basePcbNetName, pcbNetNameUseCount)
-  return pcbNetNameUseCount === 1
-    ? basePcbNetName
-    : `${basePcbNetName}-${pcbNetNameUseCount}`
+  let count = useCountByPcbNetName.get(basePcbNetName) ?? 1
+  let name = count === 1 ? basePcbNetName : `${basePcbNetName}-${count}`
+  while (
+    usedNames.has(name) ||
+    (name !== basePcbNetName && reservedNames.has(name))
+  ) {
+    name = `${basePcbNetName}-${++count}`
+  }
+  useCountByPcbNetName.set(basePcbNetName, count + 1)
+  usedNames.add(name)
+  return name
 }
 
 function getPcbNetDeclarationOrder(
@@ -105,6 +115,16 @@ export const createPcbNetEntries = (
     ])
   }
   const useCountByPcbNetName = new Map<PcbNetName, number>()
+  const usedNames = new Set<string>()
+  const reservedNames = new Set(
+    [
+      ...pcbNetNameBySourceNetId.values(),
+      ...sourceTraces.map(
+        (trace) =>
+          sanitizeField(trace.name) || sanitizeField(trace.display_name),
+      ),
+    ].filter(Boolean),
+  )
   const netEntries: PcbNetEntry[] = []
   for (const traceIndexes of traceIndexesByRoot.values()) {
     const traces = traceIndexes.flatMap((traceIndex) => {
@@ -159,6 +179,8 @@ export const createPcbNetEntries = (
       name: getUniquePcbNetName({
         basePcbNetName,
         useCountByPcbNetName,
+        usedNames,
+        reservedNames,
       }),
       sourceNetIds,
       sourcePortIds,
@@ -188,6 +210,8 @@ export const createPcbNetEntries = (
       name: getUniquePcbNetName({
         basePcbNetName,
         useCountByPcbNetName,
+        usedNames,
+        reservedNames,
       }),
       sourceNetIds: [sourceNetId],
       sourcePortIds: [],

@@ -12,7 +12,7 @@ async function scenario() {
   return extractArchive(elements)
 }
 
-test.failing("full real-board net names remain unique when a suffix is already used", async () => {
+test("full real-board net names remain unique when a suffix is already used", async () => {
   const { pcb } = await scenario()
   const names = pcb.nets.map((net) => net.name)
   expect(new Set(names).size).toBe(names.length)
@@ -30,11 +30,11 @@ test("records the actual exported net names and uniqueness", async () => {
     {
       "renamedNets": [
         "DATA",
-        "DATA-2",
+        "DATA-3",
         "DATA-2",
       ],
       "total": 82,
-      "unique": 81,
+      "unique": 82,
     }
   `)
 }, 30_000)
