@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import type { AltiumTextRecord } from "altiumts"
 import { board, extractArchive } from "./fixtures"
 
-test.failing("exports copper text on top, bottom and inner layers with Unicode, rotation and mirroring", async () => {
+test("exports copper text on top, bottom and inner layers with Unicode, rotation and mirroring", async () => {
   const { pcb } = await extractArchive([
     board({ num_layers: 4 }),
     ...["top", "bottom", "inner1"].map((layer, i) => ({

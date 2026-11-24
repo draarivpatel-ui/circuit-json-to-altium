@@ -20,7 +20,7 @@ async function scenario() {
   return extractArchive(elements)
 }
 
-test.failing("preserves the real Y1 label when its layer is changed to copper", async () => {
+test("preserves the real Y1 label when its layer is changed to copper", async () => {
   const { pcb } = await scenario()
   expect(
     pcb

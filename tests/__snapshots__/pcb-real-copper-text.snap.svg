@@ -6,5 +6,6 @@
     <g data-record="Pad" data-layer="TOP" data-pad-name="2" data-pad-shape="RECTANGLE" data-pad-stack-layer="0" data-pad-stack-mode="SIMPLE" data-plated="true"><rect x="67.9134" y="115.7481" width="47.2441" height="55.1181" fill="#ef4444" stroke="#111827" stroke-width="1"/></g>
     <g data-record="Pad" data-layer="TOP" data-pad-name="3" data-pad-shape="RECTANGLE" data-pad-stack-layer="0" data-pad-stack-mode="SIMPLE" data-plated="true"><rect x="134.8426" y="115.7481" width="47.2441" height="55.1181" fill="#ef4444" stroke="#111827" stroke-width="1"/></g>
     <g data-record="Pad" data-layer="TOP" data-pad-name="4" data-pad-shape="RECTANGLE" data-pad-stack-layer="0" data-pad-stack-mode="SIMPLE" data-plated="true"><rect x="134.8426" y="29.1339" width="47.2441" height="55.1181" fill="#ef4444" stroke="#111827" stroke-width="1"/></g>
+    <text data-record="Text" data-layer="TOP" x="0" y="0" fill="#ef4444" font-family="Arial, sans-serif" font-size="24.6683" font-weight="normal" font-style="normal" text-anchor="middle" dominant-baseline="central" transform="translate(213.5827 100) rotate(-270) scale(1 1)">Y1</text>
   </g>
 </svg>
